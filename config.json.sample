@@ -1,0 +1,10 @@
+{
+	"cryptsy": {
+		"public_key": "dead",
+		"private_key": "beef"
+	},
+	"mintpal": {
+		"email": "x@y.com",
+		"password": "changeme"
+	}
+}
