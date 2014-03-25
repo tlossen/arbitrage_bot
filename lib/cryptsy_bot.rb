@@ -22,6 +22,15 @@ class CryptsyBot
     Orderbook.new(self, *data)
   end
 
+  def balance
+    data = @client.getinfo["return"]
+    available, onhold = data["balances_available"], data["balances_onhold"] || {}
+    OpenStruct.new(
+      aur: available["AUR"].to_f + onhold["AUR"].to_f,
+      btc: available["BTC"].to_f + onhold["BTC"].to_f
+    )
+  end
+
   def buy(amount, price)
     puts "[cryptsy] buy #{amount} for #{price}".cyan
     # return true

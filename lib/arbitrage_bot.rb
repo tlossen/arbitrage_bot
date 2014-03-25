@@ -23,16 +23,14 @@ class ArbitrageBot
         opportunity(low, high) :
         OpenStruct.new(midrate: 0, spread: 0, percent: 0, volume: 0)
 
-      stamp = Time.now.strftime("%Y-%m-%d %H:%M:%S")
       status = "#{stamp}  crypt: %.5f %.5f  mint: %.5f %.5f  spread: %.5f (%.2f%%)  mid: %.5f  volume: %.1f" % 
         [co.buy, co.sell, mo.buy, mo.sell, opp.spread, opp.percent * 100, opp.midrate, opp.volume]
       
       if opp.percent > 0.02 && opp.volume >= 0.1
         puts status.green 
-
         amount = [10.0, opp.volume].min
-        if high.bot.sell(amount, opp.midrate)
-          low.bot.buy(amount, opp.midrate)
+        unless high.bot.sell(amount, opp.midrate) && low.bot.buy(amount, opp.midrate)
+          sleep(60)
         end
       elsif opp.percent > 0
         puts status.yellow
@@ -41,6 +39,13 @@ class ArbitrageBot
       end
 
       sleep(5)
+
+      if rand(42) == 0
+        mb, cb = m.balance, c.balance
+        open("balance.log", "a") do |out|
+          out.puts "#{stamp}  AUR: #{mb.aur + cb.aur}  BTC: #{mb.btc + cb.btc}"
+        end
+      end
     end
   end
 
@@ -52,6 +57,10 @@ class ArbitrageBot
       :percent => (high.buy - low.sell) / low.sell,
       :volume => [low.sell_volume(midrate), high.buy_volume(midrate)].min
     )
+  end
+
+  def self.stamp
+    Time.now.strftime("%Y-%m-%d %H:%M:%S")
   end
 
 end
