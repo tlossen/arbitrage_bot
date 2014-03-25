@@ -21,7 +21,7 @@ class ArbitrageBot
 
       opp = low ? 
         opportunity(low, high) :
-        OpenStruct.new(midrate: 0, spread: 0, percent: 0, volume: 0)
+        OpenStruct.new(midrate: 0, limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0)
 
       status = "#{stamp}  crypt: %.5f %.5f  mint: %.5f %.5f  spread: %.5f (%.2f%%)  mid: %.5f  volume: %.1f" % 
         [co.buy, co.sell, mo.buy, mo.sell, opp.spread, opp.percent * 100, opp.midrate, opp.volume]
@@ -29,7 +29,7 @@ class ArbitrageBot
       if opp.percent > 0.02 && opp.volume >= 0.1
         puts status.green 
         amount = [10.0, opp.volume].min
-        unless high.bot.sell(amount, opp.midrate) && low.bot.buy(amount, opp.midrate)
+        unless high.bot.sell(amount, opp.limit_sell) && low.bot.buy(amount, opp.limit_buy)
           sleep(60)
         end
       elsif opp.percent > 0
@@ -40,22 +40,35 @@ class ArbitrageBot
 
       sleep(5)
 
-      if rand(42) == 0
+      append_regularly("balance.log", 5 * 60) do |out|
         mb, cb = m.balance, c.balance
-        open("balance.log", "a") do |out|
-          out.puts "#{stamp}  AUR: #{mb.aur + cb.aur}  BTC: #{mb.btc + cb.btc}"
-        end
+        line = "#{stamp}  AUR: %.2f + %.2f = %.2f  BTC: %.2f + %.2f = %.2f" %
+          [cb.aur, mb.aur, cb.aur + mb.aur, cb.btc, mb.btc, cb.btc + mb.btc]
+        puts line.red
+        out.puts line
       end
+    end
+  end
+
+  def self.append_regularly(file, seconds, &block)
+    modified_at = File.stat(file).ctime rescue 0
+    return if Time.now.to_i - modified_at.to_i < seconds
+    open(file, "a") do |out|
+      yield out
     end
   end
 
   def self.opportunity(low, high)
     midrate = ((low.sell + high.buy) / 2.0).round(8)
+    limit_sell = midrate * 1.0025
+    limit_buy = midrate * 0.9975
     OpenStruct.new(
-      :midrate => midrate,
-      :spread => high.buy - low.sell,
-      :percent => (high.buy - low.sell) / low.sell,
-      :volume => [low.sell_volume(midrate), high.buy_volume(midrate)].min
+      midrate: midrate,
+      limit_sell: limit_sell,
+      limit_buy: limit_buy,
+      spread: high.buy - low.sell,
+      percent: (high.buy - low.sell) / low.sell,
+      volume: [low.sell_volume(limit_buy), high.buy_volume(limit_sell)].min
     )
   end
 
