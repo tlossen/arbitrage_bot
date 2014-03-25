@@ -29,6 +29,8 @@ class CryptsyBot
     success = ("1" == result["success"])
     p result unless success
     success
+  rescue
+    false
   end
 
   def sell(amount, price)
@@ -38,6 +40,8 @@ class CryptsyBot
     success = ("1" == result["success"])
     p result unless success
     success
+  rescue
+    false
   end
 
   def inspect
