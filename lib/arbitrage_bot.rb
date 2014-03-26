@@ -26,11 +26,11 @@ class ArbitrageBot
       status = "#{stamp}  crypt: %.5f %.5f  mint: %.5f %.5f  spread: %.5f (%.2f%%)  mid: %.5f  volume: %.1f" % 
         [co.buy, co.sell, mo.buy, mo.sell, opp.spread, opp.percent * 100, opp.midrate, opp.volume]
       
-      if opp.percent > 0.02 && opp.volume >= 0.1
+      if opp.percent > 0.01 && opp.volume >= 0.1
         puts status.green 
         amount = [15.0, opp.percent * 100, opp.volume].min
         unless high.bot.sell(amount, opp.limit_sell) && low.bot.buy(amount, opp.limit_buy)
-          sleep(60)
+          sleep(30)
         end
       elsif opp.percent > 0
         puts status.yellow
@@ -44,7 +44,7 @@ class ArbitrageBot
         mb, cb = m.balance, c.balance
         line = "#{stamp}  AUR: %.1f + %.1f = %.1f  BTC: %.3f + %.3f = %.3f" %
           [cb.aur, mb.aur, cb.aur + mb.aur, cb.btc, mb.btc, cb.btc + mb.btc]
-        puts line.red
+        puts line.blue
         out.puts line
       end
     end
