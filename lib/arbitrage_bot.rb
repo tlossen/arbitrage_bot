@@ -9,7 +9,7 @@ class ArbitrageBot
     m = MintpalBot.new
     c = CryptsyBot.new
 
-    loop do
+    forever do
       mo, co = m.orderbook, c.orderbook
       
       low, high = nil, nil
@@ -28,7 +28,7 @@ class ArbitrageBot
       
       if opp.percent > 0.02 && opp.volume >= 0.1
         puts status.green 
-        amount = [10.0, opp.volume].min
+        amount = [15.0, opp.percent * 100, opp.volume].min
         unless high.bot.sell(amount, opp.limit_sell) && low.bot.buy(amount, opp.limit_buy)
           sleep(60)
         end
@@ -38,11 +38,11 @@ class ArbitrageBot
         puts status
       end
 
-      sleep(5)
+      sleep(2)
 
-      append_regularly("balance.log", 5 * 60) do |out|
+      append_regularly("balance.log", 60) do |out|
         mb, cb = m.balance, c.balance
-        line = "#{stamp}  AUR: %.2f + %.2f = %.2f  BTC: %.2f + %.2f = %.2f" %
+        line = "#{stamp}  AUR: %.1f + %.1f = %.1f  BTC: %.3f + %.3f = %.3f" %
           [cb.aur, mb.aur, cb.aur + mb.aur, cb.btc, mb.btc, cb.btc + mb.btc]
         puts line.red
         out.puts line
