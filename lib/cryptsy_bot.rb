@@ -12,6 +12,10 @@ class CryptsyBot
     )
   end
 
+  def name
+    :cryptsy
+  end
+
   def orderbook
     json = @client.marketorders(AUR_BTC)["return"]
     data = %w[buy sell].map do |type|
