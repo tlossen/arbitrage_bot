@@ -5,7 +5,8 @@ class MintpalClient
   BUY = 0
   SELL = 1
 
-  def initialize
+  def initialize(config)
+    @config = config
     @agent = Mechanize.new do |agent|
       agent.user_agent_alias = "Mac Safari"
     end
@@ -15,23 +16,14 @@ class MintpalClient
     :mintpal
   end
 
-  def with_login(&block)
-    page = @agent.get("https://www.mintpal.com/login")
-    token = page.forms.first["csrf_token"]
-    begin
-      @agent.post("https://www.mintpal.com/action/authenticateUser", {
-        csrf_token: token,
-        email: config["mintpal"]["email"],
-        password: config["mintpal"]["password"]
-      }, {
-        "x-requested-with" => "XMLHttpRequest"
-      })
-      yield token
-    rescue
-      return false
-    ensure
-      @agent.get("https://www.mintpal.com/logout")
+  def orderbook
+    data = %w[buy sell].map do |type|
+      result = open("https://api.mintpal.com/market/orders/AUR/BTC/#{type.upcase}").read
+      JSON.parse(result)["orders"].map do |row|
+        [row["price"], row["amount"], row["total"]].map(&:to_f)
+      end
     end
+    return Orderbook.new(self, *data)
   end
 
   def balance
@@ -101,24 +93,29 @@ class MintpalClient
     # password: xxxx
   end
 
-  def orderbook
-    data = %w[buy sell].map do |type|
-      result = open("https://api.mintpal.com/market/orders/AUR/BTC/#{type.upcase}").read
-      JSON.parse(result)["orders"].map do |row|
-        [row["price"], row["amount"], row["total"]].map(&:to_f)
-      end
-    end
-    return Orderbook.new(self, *data)
-  end
-
   def inspect
     "<#{self.class.name}>"
   end
 
 private
 
-  def config
-    @config ||= JSON.parse(open("config.json").read)
+  def with_login(&block)
+    page = @agent.get("https://www.mintpal.com/login")
+    token = page.forms.first["csrf_token"]
+    begin
+      @agent.post("https://www.mintpal.com/action/authenticateUser", {
+        csrf_token: token,
+        email: @config["mintpal"]["email"],
+        password: @config["mintpal"]["password"]
+      }, {
+        "x-requested-with" => "XMLHttpRequest"
+      })
+      yield token
+    rescue
+      return false
+    ensure
+      @agent.get("https://www.mintpal.com/logout")
+    end
   end
 
 end

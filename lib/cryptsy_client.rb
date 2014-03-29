@@ -6,7 +6,7 @@ class CryptsyClient
   AUR_BTC = 160
   BC_BTC = 179
 
-  def initialize
+  def initialize(config)
     @client = Cryptsy::API::Client.new(
       config["cryptsy"]["public_key"], 
       config["cryptsy"]["private_key"]
@@ -60,12 +60,6 @@ class CryptsyClient
 
   def inspect
     "<#{self.class.name}>"
-  end
-
-private
-
-  def config
-    @config ||= JSON.parse(open("config.json").read)
   end
 
 end

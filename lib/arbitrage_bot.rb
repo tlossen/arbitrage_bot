@@ -1,8 +1,10 @@
 class ArbitrageBot
 
   def self.run 
-    m = MintpalClient.new
-    c = CryptsyClient.new
+    config = JSON.parse(open("config.json").read)
+
+    m = MintpalClient.new(config)
+    c = CryptsyClient.new(config)
 
     min_spread = Hash.new(3.5)
 
