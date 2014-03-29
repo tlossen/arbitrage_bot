@@ -1,9 +1,9 @@
 class Orderbook
 
-  attr_reader :bot
+  attr_reader :client
 
-  def initialize(bot, buy, sell)
-    @bot, @buy, @sell = bot, buy, sell
+  def initialize(client, buy, sell)
+    @client, @buy, @sell = client, buy, sell
   end
 
   def buy

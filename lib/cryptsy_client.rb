@@ -1,9 +1,10 @@
 require "cryptsy/api"
 
 
-class CryptsyBot
+class CryptsyClient
 
   AUR_BTC = 160
+  BC_BTC = 179
 
   def initialize
     @client = Cryptsy::API::Client.new(

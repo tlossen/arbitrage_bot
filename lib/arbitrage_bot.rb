@@ -1,13 +1,8 @@
-require "lib/orderbook.rb"
-require "lib/cryptsy_bot.rb"
-require "lib/mintpal_bot.rb"
-
-
 class ArbitrageBot
 
   def self.run 
-    m = MintpalBot.new
-    c = CryptsyBot.new
+    m = MintpalClient.new
+    c = CryptsyClient.new
 
     min_spread = Hash.new(3.5)
 
@@ -26,7 +21,7 @@ class ArbitrageBot
         OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0)
 
       hurdle = low ?
-        min_spread[high.bot.name] / 100.0 :
+        min_spread[high.client.name] / 100.0 :
         0.0
 
       status = "#{stamp}  crypt: %.5f %.5f  mint: %.5f %.5f  spread: %.5f (%.2f%%)  volume: %.1f  hurdle: %.2f%%" % 
@@ -34,8 +29,8 @@ class ArbitrageBot
       
       if opp.percent > hurdle && opp.volume >= 0.1
         puts status.green 
-        amount = [20.0, opp.percent * 100, opp.volume].min
-        unless high.bot.sell(amount, opp.limit_sell) && low.bot.buy(amount, opp.limit_buy)
+        amount = [1.5 * opp.percent * 100, opp.volume, 20.0].min
+        unless high.client.sell(amount, opp.limit_sell) && low.client.buy(amount, opp.limit_buy)
           sleep(30)
         end
       elsif opp.percent > 0
@@ -61,7 +56,7 @@ class ArbitrageBot
   end
 
   def self.min_spread(ratio)
-    0.5 - Math.log(ratio, 10) * 10
+    [-Math.log(ratio, 10) * 10, 0.5].max
   end
 
   def self.append_regularly(file, seconds, &block)
