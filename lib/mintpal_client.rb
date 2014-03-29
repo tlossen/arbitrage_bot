@@ -1,11 +1,16 @@
 class MintpalClient
 
-  AUR_BTC = 25
-
   BUY = 0
   SELL = 1
 
-  def initialize(config)
+  MARKET = {
+    "AUR" => 25,
+    "BC" => 23
+  }
+
+  def initialize(currency, config)
+    @currency = currency
+    @market = MARKET[currency]
     @config = config
     @agent = Mechanize.new do |agent|
       agent.user_agent_alias = "Mac Safari"
@@ -18,7 +23,7 @@ class MintpalClient
 
   def orderbook
     data = %w[buy sell].map do |type|
-      result = open("https://api.mintpal.com/market/orders/AUR/BTC/#{type.upcase}").read
+      result = open("https://api.mintpal.com/market/orders/#{@currency}/BTC/#{type.upcase}").read
       JSON.parse(result)["orders"].map do |row|
         [row["price"], row["amount"], row["total"]].map(&:to_f)
       end
@@ -28,26 +33,26 @@ class MintpalClient
 
   def balance
     with_login do |token|
-      @agent.get("https://www.mintpal.com/market/AUR/BTC") do |page|
+      @agent.get("https://www.mintpal.com/balances") do |page|
+        data = Hash[*page.search("#sidebar ul:nth-child(2) li a span").map(&:text)]
         return OpenStruct.new(
-          aur: page.at("a.coinBalance").text.to_f,
-          btc: page.at("a.exchangeBalance").text.to_f
+          aur: data["AUR"].to_f,
+          bc: data["BC"].to_f,
+          btc: data["BTC"].to_f
         )
       end
     end
   end
 
   def buy(amount, price)
-    puts "[mintpal] buy #{amount} for #{price}".cyan
-    # return true
+    puts "[mintpal] buy #{@currency} #{amount} for #{price}".cyan
     total = amount * price
     fee = total * 0.0015
-
     with_login do |token|
       page = @agent.post("https://www.mintpal.com/action/addOrder", {
         csrf_token: token,
         type: BUY,
-        market: AUR_BTC,
+        market: @market,
         amount: amount,
         price: price,
         buyNetTotal: total + fee      
@@ -62,15 +67,14 @@ class MintpalClient
   end
 
   def sell(amount, price)
-    puts "[mintpal] sell #{amount} for #{price}".cyan
-    # return true
+    puts "[mintpal] sell #{@currency} #{amount} for #{price}".cyan
     total = amount * price
     fee = total * 0.0015
     with_login do |token|
       page = @agent.post("https://www.mintpal.com/action/addOrder", {
         csrf_token: token,
         type: SELL,
-        market: AUR_BTC,
+        market: @market,
         amount: amount,
         price: price,
         sellNetTotal: total - fee
@@ -82,15 +86,6 @@ class MintpalClient
       p result unless success
       success
     end
-  end
-
-  def transfer
-    # https://www.mintpal.com/action/requestWithdrawal
-    # csrf_token: MTM5NTY4OTQwMm0wUDZQUXNGNXZpanFXTmdTUEZlVDVCS2Y3TnZkWlFi
-    # coin: 26
-    # amount: 30.00000000
-    # address: ARJkGyZ43b6G9ocKiKtvbXPXDMkrZnUauZ
-    # password: xxxx
   end
 
   def inspect
@@ -111,8 +106,6 @@ private
         "x-requested-with" => "XMLHttpRequest"
       })
       yield token
-    rescue
-      return false
     ensure
       @agent.get("https://www.mintpal.com/logout")
     end

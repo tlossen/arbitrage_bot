@@ -3,7 +3,7 @@ class ArbitrageBot
   def self.run 
     config = JSON.parse(open("config.json").read)
 
-    m = MintpalClient.new(config)
+    m = MintpalClient.new("AUR", config)
     c = CryptsyClient.new(:aur, config)
 
     hurdle = Hash.new(min_spread(0.5))
