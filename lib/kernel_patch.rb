@@ -9,6 +9,7 @@ module Kernel
         raise
       rescue Exception => e
         puts e.message.red
+        puts e.backtrace
         sleep(3)
       end
     end

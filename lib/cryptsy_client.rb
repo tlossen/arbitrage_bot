@@ -3,10 +3,13 @@ require "cryptsy/api"
 
 class CryptsyClient
 
-  AUR_BTC = 160
-  BC_BTC = 179
+  MARKET = {
+    aur: 160,
+    bc: 179
+  }
 
-  def initialize(config)
+  def initialize(currency, config)
+    @currency = currency
     @client = Cryptsy::API::Client.new(
       config["cryptsy"]["public_key"], 
       config["cryptsy"]["private_key"]
@@ -18,7 +21,7 @@ class CryptsyClient
   end
 
   def orderbook
-    json = @client.marketorders(AUR_BTC)["return"]
+    json = @client.marketorders(market)["return"]
     data = %w[buy sell].map do |type|
       json["#{type}orders"].map do |row|
         [row["#{type}price"], row["quantity"], row["total"]].map(&:to_f)
@@ -32,14 +35,14 @@ class CryptsyClient
     available, onhold = data["balances_available"], data["balances_onhold"] || {}
     OpenStruct.new(
       aur: available["AUR"].to_f + onhold["AUR"].to_f,
+      bc:  available["BC"].to_f + onhold["BC"].to_f,
       btc: available["BTC"].to_f + onhold["BTC"].to_f
     )
   end
 
   def buy(amount, price)
-    puts "[cryptsy] buy #{amount} for #{price}".cyan
-    # return true
-    result = @client.createorder(AUR_BTC, "buy", amount, price)
+    puts "[cryptsy] buy #{@currency.to_s.upcase} #{amount} for #{price}".cyan
+    result = @client.createorder(market, "buy", amount, price)
     success = ("1" == result["success"])
     p result unless success
     success
@@ -48,9 +51,8 @@ class CryptsyClient
   end
 
   def sell(amount, price)
-    puts "[cryptsy] sell #{amount} for #{price}".cyan
-    # return true
-    result = @client.createorder(AUR_BTC, "sell", amount, price)
+    puts "[cryptsy] sell #{@currency.to_s.upcase} #{amount} for #{price}".cyan
+    result = @client.createorder(market, "sell", amount, price)
     success = ("1" == result["success"])
     p result unless success
     success
@@ -60,6 +62,12 @@ class CryptsyClient
 
   def inspect
     "<#{self.class.name}>"
+  end
+
+private
+
+  def market
+    MARKET[@currency]
   end
 
 end

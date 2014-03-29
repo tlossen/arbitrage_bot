@@ -4,9 +4,9 @@ class ArbitrageBot
     config = JSON.parse(open("config.json").read)
 
     m = MintpalClient.new(config)
-    c = CryptsyClient.new(config)
+    c = CryptsyClient.new(:aur, config)
 
-    min_spread = Hash.new(3.5)
+    hurdle = Hash.new(min_spread(0.5))
 
     forever do
       mo, co = m.orderbook, c.orderbook
@@ -19,17 +19,13 @@ class ArbitrageBot
       end
 
       opp = low ? 
-        opportunity(low, high) :
-        OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0)
-
-      hurdle = low ?
-        min_spread[high.client.name] / 100.0 :
-        0.0
+        opportunity(low, high, hurdle) :
+        OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0, hurdle: 0)
 
       status = "#{stamp}  crypt: %.5f %.5f  mint: %.5f %.5f  spread: %.5f (%.2f%%)  volume: %.1f  hurdle: %.2f%%" % 
-        [co.buy, co.sell, mo.buy, mo.sell, opp.spread, opp.percent * 100, opp.volume, hurdle * 100]
+        [co.buy, co.sell, mo.buy, mo.sell, opp.spread, opp.percent * 100, opp.volume, opp.hurdle * 100]
       
-      if opp.percent > hurdle && opp.volume >= 0.1
+      if opp.percent > opp.hurdle && opp.volume >= 0.1
         puts status.green 
         amount = [1.5 * opp.percent * 100, opp.volume, 20.0].min
         unless high.client.sell(amount, opp.limit_sell) && low.client.buy(amount, opp.limit_buy)
@@ -45,7 +41,7 @@ class ArbitrageBot
 
       append_regularly("balance.log", 60) do |out|
         mb, cb = m.balance, c.balance
-        min_spread = {
+        hurdle = {
           mintpal: min_spread(mb.aur / (cb.aur + mb.aur)),
           cryptsy: min_spread(cb.aur / (cb.aur + mb.aur))
         }
@@ -57,19 +53,7 @@ class ArbitrageBot
     end
   end
 
-  def self.min_spread(ratio)
-    [-Math.log(ratio, 10) * 10, 0.5].max
-  end
-
-  def self.append_regularly(file, seconds, &block)
-    modified_at = File.stat(file).ctime rescue 0
-    return if Time.now.to_i - modified_at.to_i < seconds
-    open(file, "a") do |out|
-      yield out
-    end
-  end
-
-  def self.opportunity(low, high)
+  def self.opportunity(low, high, hurdle)
     midrate = (low.sell + high.buy) / 2.0
     limit_sell = (midrate * 1.0025).round(8)
     limit_buy = (midrate * 0.9975).round(8)
@@ -78,12 +62,25 @@ class ArbitrageBot
       limit_buy: limit_buy,
       spread: high.buy - low.sell,
       percent: (high.buy - low.sell) / low.sell,
-      volume: [low.sell_volume(limit_buy), high.buy_volume(limit_sell)].min
+      volume: [low.sell_volume(limit_buy), high.buy_volume(limit_sell)].min,
+      hurdle: hurdle[high.client.name] / 100.0
     )
+  end
+
+  def self.min_spread(ratio)
+    [-Math.log(ratio, 10) * 10, 0.5].max
   end
 
   def self.stamp
     Time.now.strftime("%Y-%m-%d %H:%M:%S")
+  end
+
+  def self.append_regularly(file, seconds, &block)
+    modified_at = File.stat(file).ctime rescue 0
+    return if Time.now.to_i - modified_at.to_i < seconds
+    open(file, "a") do |out|
+      yield out
+    end
   end
 
 end
