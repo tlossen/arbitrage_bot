@@ -4,12 +4,13 @@ require "cryptsy/api"
 class CryptsyClient
 
   MARKET = {
-    aur: 160,
-    bc: 179
+    "AUR" => 160,
+    "BC" => 179
   }
 
   def initialize(currency, config)
     @currency = currency
+    @market = MARKET[currency]
     @client = Cryptsy::API::Client.new(
       config["cryptsy"]["public_key"], 
       config["cryptsy"]["private_key"]
@@ -21,7 +22,7 @@ class CryptsyClient
   end
 
   def orderbook
-    json = @client.marketorders(market)["return"]
+    json = @client.marketorders(@market)["return"]
     data = %w[buy sell].map do |type|
       json["#{type}orders"].map do |row|
         [row["#{type}price"], row["quantity"], row["total"]].map(&:to_f)
@@ -41,8 +42,8 @@ class CryptsyClient
   end
 
   def buy(amount, price)
-    puts "[cryptsy] buy #{@currency.to_s.upcase} #{amount} for #{price}".cyan
-    result = @client.createorder(market, "buy", amount, price)
+    puts "[cryptsy] buy #{@currency} #{amount} for #{price}".cyan
+    result = @client.createorder(@market, "buy", amount, price)
     success = ("1" == result["success"])
     p result unless success
     success
@@ -51,8 +52,8 @@ class CryptsyClient
   end
 
   def sell(amount, price)
-    puts "[cryptsy] sell #{@currency.to_s.upcase} #{amount} for #{price}".cyan
-    result = @client.createorder(market, "sell", amount, price)
+    puts "[cryptsy] sell #{@currency} #{amount} for #{price}".cyan
+    result = @client.createorder(@market, "sell", amount, price)
     success = ("1" == result["success"])
     p result unless success
     success
@@ -62,12 +63,6 @@ class CryptsyClient
 
   def inspect
     "<#{self.class.name}>"
-  end
-
-private
-
-  def market
-    MARKET[@currency]
   end
 
 end

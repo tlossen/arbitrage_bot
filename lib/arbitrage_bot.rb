@@ -4,9 +4,10 @@ class ArbitrageBot
     config = JSON.parse(open("config.json").read)
 
     m = MintpalClient.new("AUR", config)
-    c = CryptsyClient.new(:aur, config)
+    c = CryptsyClient.new("AUR", config)
 
     hurdle = Hash.new(min_spread(0.5))
+    step = 1
 
     forever do
       mo, co = m.orderbook, c.orderbook
@@ -22,12 +23,12 @@ class ArbitrageBot
         opportunity(low, high, hurdle) :
         OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0, hurdle: 0)
 
-      status = "#{stamp}  crypt: %.5f %.5f  mint: %.5f %.5f  spread: %.5f (%.2f%%)  volume: %.1f  hurdle: %.2f%%" % 
+      status = "#{stamp}  c: %.7f %.7f  m: %.7f %.7f  spread: %.7f (%.2f%%)  vol: %.1f  hurdle: %.2f%%" % 
         [co.buy, co.sell, mo.buy, mo.sell, opp.spread, opp.percent * 100, opp.volume, opp.hurdle * 100]
       
       if opp.percent > opp.hurdle && opp.volume >= 0.1
         puts status.green 
-        amount = [1.5 * opp.percent * 100, opp.volume, 20.0].min
+        amount = [step * opp.percent * 100, opp.volume, 20.0].min
         unless high.client.sell(amount, opp.limit_sell) && low.client.buy(amount, opp.limit_buy)
           sleep(30)
         end
@@ -45,8 +46,9 @@ class ArbitrageBot
           mintpal: min_spread(mb.aur / (cb.aur + mb.aur)),
           cryptsy: min_spread(cb.aur / (cb.aur + mb.aur))
         }
-        line = "#{stamp}  AUR: %.1f + %.1f = %.1f  BTC: %.3f + %.3f = %.3f" %
-          [cb.aur, mb.aur, cb.aur + mb.aur, cb.btc, mb.btc, cb.btc + mb.btc]
+        step = cb.aur + mb.aur / 200
+        line = "#{stamp}  AUR: %.1f + %.1f = %.1f  BC: %.1f + %.1f = %.1f  BTC: %.3f + %.3f = %.3f" %
+          [cb.aur, mb.aur, cb.aur + mb.aur,  cb.bc, mb.bc, cb.bc + mb.bc,  cb.btc, mb.btc, cb.btc + mb.btc]
         puts line.blue
         out.puts line
       end
