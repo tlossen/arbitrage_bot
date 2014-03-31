@@ -33,18 +33,17 @@ class CryptsyClient
 
   def balance
     data = @client.getinfo["return"]
-    available, onhold = data["balances_available"], data["balances_onhold"] || {}
-    OpenStruct.new(
-      aur: available["AUR"].to_f + onhold["AUR"].to_f,
-      bc:  available["BC"].to_f + onhold["BC"].to_f,
-      btc: available["BTC"].to_f + onhold["BTC"].to_f
-    )
+    # TODO: data["balances_onhold"] || {}
+    data["balances_available"].remap do |hash, key, value|
+      hash[key] = value.to_f if value.to_f > 0
+    end
   end
 
   def buy(amount, price)
     puts "[cryptsy] buy #{@currency} #{amount} for #{price}".cyan
     result = @client.createorder(@market, "buy", amount, price)
     success = ("1" == result["success"])
+    # TODO: raise exception
     p result unless success
     success
   rescue

@@ -34,12 +34,8 @@ class MintpalClient
   def balance
     with_login do |token|
       @agent.get("https://www.mintpal.com/balances") do |page|
-        data = Hash[*page.search("#sidebar ul:nth-child(2) li a span").map(&:text)]
-        return OpenStruct.new(
-          aur: data["AUR"].to_f,
-          bc: data["BC"].to_f,
-          btc: data["BTC"].to_f
-        )
+        raw = page.search("#sidebar ul:nth-child(2) li a span").map(&:text)
+        return Hash[*raw].change { |value| value.to_f }
       end
     end
   end

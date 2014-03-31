@@ -5,6 +5,8 @@ require "colorize"
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
+require "lib/hash_patch.rb"
+require "lib/time_patch.rb"
 require "lib/kernel_patch.rb"
 require "lib/mechanize_patch.rb"
 
