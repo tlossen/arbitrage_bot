@@ -5,7 +5,8 @@ class MintpalClient
 
   MARKET = {
     "AUR" => 25,
-    "BC" => 23
+    "BC" => 23,
+    "LTC" => 19
   }
 
   def initialize(currency, config)
@@ -41,7 +42,7 @@ class MintpalClient
   end
 
   def buy(amount, price)
-    puts "[mintpal] buy #{@currency} #{amount} for #{price}".cyan
+    puts "#{Time.stamp} [mintpal]  buy #{@currency} %.2f for %.8f".cyan % [amount, price]
     total = amount * price
     fee = total * 0.0015
     with_login do |token|
@@ -57,13 +58,13 @@ class MintpalClient
       })
       result = JSON.parse(page.body)
       success = ("success" == result["response"])
-      p result unless success
+      raise result["reason"] unless success
       success
     end
   end
 
   def sell(amount, price)
-    puts "[mintpal] sell #{@currency} #{amount} for #{price}".cyan
+    puts "#{Time.stamp} [mintpal] sell #{@currency} %.2f for %.8f".cyan % [amount, price]
     total = amount * price
     fee = total * 0.0015
     with_login do |token|
@@ -79,7 +80,7 @@ class MintpalClient
       })
       result = JSON.parse(page.body)
       success = ("success" == result["response"])
-      p result unless success
+      raise result["reason"] unless success
       success
     end
   end

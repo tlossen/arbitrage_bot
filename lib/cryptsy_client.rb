@@ -42,7 +42,7 @@ class CryptsyClient
   end
 
   def buy(amount, price)
-    puts "[cryptsy] buy #{@currency} #{amount} for #{price}".cyan
+    puts "#{Time.stamp} [cryptsy]  buy #{@currency} %.2f for %.8f".cyan % [amount, price]
     result = @client.createorder(@market, "buy", amount, price)
     success = ("1" == result["success"])
     # TODO: raise exception
@@ -53,7 +53,7 @@ class CryptsyClient
   end
 
   def sell(amount, price)
-    puts "[cryptsy] sell #{@currency} #{amount} for #{price}".cyan
+    puts "#{Time.stamp} [cryptsy] sell #{@currency} %.2f for %.8f".cyan % [amount, price]
     result = @client.createorder(@market, "sell", amount, price)
     success = ("1" == result["success"])
     p result unless success

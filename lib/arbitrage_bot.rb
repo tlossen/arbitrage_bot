@@ -3,23 +3,26 @@ class ArbitrageBot
   def self.run 
     config = JSON.parse(open("config.json").read)
     bots = [
-      ArbitrageBot.new("AUR", config)
+      ArbitrageBot.new("AUR", config),
+      ArbitrageBot.new("BC", config)
     ]
 
     forever do
-      bots.rotate!
-      bots.first.execute
+      bots.rotate! unless bots.first.execute
 
-      append_regularly("balance.log", 60) do |out|
+      append_regularly("balance.log", 40) do |out|
         balance = bots.first.fetch_balance
         bots.each { |bot| bot.adjust(balance) }
 
         # TODO: balance wants to be an object
-        line = "#{Time.stamp}  AUR: %.1f + %.1f = %.1f  BTC: %.3f + %.3f = %.3f" %
+        line = "#{Time.stamp}  AUR: %.1f + %.1f = %.1f  BC: %.1f + %.1f = %.1f  BTC: %.3f + %.3f = %.3f" %
           [
             balance[:cryptsy]["AUR"],
             balance[:mintpal]["AUR"],
             balance[:cryptsy]["AUR"] + balance[:mintpal]["AUR"],
+            balance[:cryptsy]["BC"],
+            balance[:mintpal]["BC"],
+            balance[:cryptsy]["BC"] + balance[:mintpal]["BC"],
             balance[:cryptsy]["BTC"],
             balance[:mintpal]["BTC"],
             balance[:cryptsy]["BTC"] + balance[:mintpal]["BTC"]
@@ -28,7 +31,7 @@ class ArbitrageBot
         out.puts line
       end
 
-      sleep(2)
+      sleep(0.5)
     end
   end
 
@@ -67,18 +70,20 @@ class ArbitrageBot
       opportunity(low, high) :
       OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0, hurdle: 0)
 
-    status = "#{Time.stamp}  c: %.5f %.5f  m: %.5f %.5f  spread: %.5f (%.2f%%)  vol: %.1f  hurdle: %.2f%%" % 
-      [c.buy, c.sell, m.buy, m.sell, opp.spread, opp.percent * 100, opp.volume, opp.hurdle * 100]
+    status = "#{Time.stamp}  %3s  c: %.5f %.5f  m: %.5f %.5f  spread: %.5f (%.2f%% > %.2f%%)  volume: %.1f" %
+      [@currency, c.buy, c.sell, m.buy, m.sell, opp.spread, opp.percent * 100, opp.hurdle * 100, opp.volume]
     
     if opp.percent > opp.hurdle && opp.volume >= 0.1
       puts status.green 
-      amount = [@step * opp.percent * 100, opp.volume, 20.0].min
+      amount = [@step * [opp.percent * 100, 20].min, opp.volume].min
       high.client.sell(amount, opp.limit_sell) && low.client.buy(amount, opp.limit_buy)
+      return true
     elsif opp.percent > 0
       puts status.yellow
     else
       puts status
     end
+    false
   end
 
   def fetch_balance
