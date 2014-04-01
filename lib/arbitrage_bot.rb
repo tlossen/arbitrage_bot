@@ -55,17 +55,19 @@ class ArbitrageBot
     m, c = @mintpal.orderbook, @cryptsy.orderbook
     
     low, high = nil, nil
-    if m.sell < c.buy
-      low, high = m, c
-    elsif c.sell < m.buy
-      low, high = c, m
+    if m.valid? && c.valid?
+      if m.sell < c.buy
+        low, high = m, c
+      elsif c.sell < m.buy
+        low, high = c, m
+      end
     end
 
     opp = low ? 
       opportunity(low, high) :
       OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0, hurdle: 0)
 
-    status = "#{Time.stamp}  c: %.7f %.7f  m: %.7f %.7f  spread: %.7f (%.2f%%)  vol: %.1f  hurdle: %.2f%%" % 
+    status = "#{Time.stamp}  c: %.5f %.5f  m: %.5f %.5f  spread: %.5f (%.2f%%)  vol: %.1f  hurdle: %.2f%%" % 
       [c.buy, c.sell, m.buy, m.sell, opp.spread, opp.percent * 100, opp.volume, opp.hurdle * 100]
     
     if opp.percent > opp.hurdle && opp.volume >= 0.1

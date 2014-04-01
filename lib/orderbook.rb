@@ -6,6 +6,10 @@ class Orderbook
     @client, @buy, @sell = client, buy, sell
   end
 
+  def valid?
+    buy < sell
+  end
+
   def buy
     @buy[0][0]
   end

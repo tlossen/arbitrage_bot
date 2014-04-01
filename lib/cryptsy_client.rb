@@ -5,7 +5,9 @@ class CryptsyClient
 
   MARKET = {
     "AUR" => 160,
-    "BC" => 179
+    "BC" => 179,
+    "LTC" => 3,
+    "VTC" => 151
   }
 
   def initialize(currency, config)
