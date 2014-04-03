@@ -4,6 +4,7 @@ class ArbitrageBot
     config = JSON.parse(open("config.json").read)
     bots = [
       ArbitrageBot.new("AUR", config),
+      ArbitrageBot.new("DOGE", config),
       ArbitrageBot.new("BC", config)
     ]
 
@@ -12,22 +13,14 @@ class ArbitrageBot
 
       append_regularly("balance.log", 40) do |out|
         balance = bots.first.fetch_balance
-        bots.each { |bot| bot.adjust(balance) }
+        bots.each do |bot| 
+          line = bot.adjust(balance)
+          puts line.blue
+        end
 
-        # TODO: balance wants to be an object
-        line = "#{Time.stamp}  AUR: %.1f + %.1f = %.1f  BC: %.1f + %.1f = %.1f  BTC: %.3f + %.3f = %.3f" %
-          [
-            balance[:cryptsy]["AUR"],
-            balance[:mintpal]["AUR"],
-            balance[:cryptsy]["AUR"] + balance[:mintpal]["AUR"],
-            balance[:cryptsy]["BC"],
-            balance[:mintpal]["BC"],
-            balance[:cryptsy]["BC"] + balance[:mintpal]["BC"],
-            balance[:cryptsy]["BTC"],
-            balance[:mintpal]["BTC"],
-            balance[:cryptsy]["BTC"] + balance[:mintpal]["BTC"]
-          ]
-        puts line.blue
+        c, m = balance[:cryptsy]["BTC"], balance[:mintpal]["BTC"]
+        line = "#{Time.stamp}   BTC  %.3f + %.3f = %.3f" % [ c, m, c + m ]
+        puts line.blue.on_white
         out.puts line
       end
 
@@ -54,6 +47,10 @@ class ArbitrageBot
     @step = 1.0
   end
 
+  def doge?
+    @currency == "DOGE"
+  end
+
   def execute
     m, c = @mintpal.orderbook, @cryptsy.orderbook
     
@@ -70,12 +67,15 @@ class ArbitrageBot
       opportunity(low, high) :
       OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0, hurdle: 0)
 
-    status = "#{Time.stamp}  %3s  c: %.5f %.5f  m: %.5f %.5f  spread: %.5f (%.2f%% > %.2f%%)  volume: %.1f" %
+    status = "#{Time.stamp}  %4s  c: %.8f %.8f  m: %.8f %.8f  spread: %.8f (%.2f%% > %.2f%%)  volume: %.1f" %
       [@currency, c.buy, c.sell, m.buy, m.sell, opp.spread, opp.percent * 100, opp.hurdle * 100, opp.volume]
+    status.gsub!(/0\.(\d{8})/) { |m| $1 } 
     
     if opp.percent > opp.hurdle && opp.volume >= 0.1
       puts status.green 
-      amount = [@step * [opp.percent * 100, 20].min, opp.volume].min
+      amount = doge? ? 
+        [@step * 10, opp.volume].min :
+        [@step * [opp.percent * 100, 20].min, opp.volume].min
       high.client.sell(amount, opp.limit_sell) && low.client.buy(amount, opp.limit_buy)
       return true
     elsif opp.percent > 0
@@ -94,20 +94,22 @@ class ArbitrageBot
   end
 
   def adjust(balance)
-    m = balance[:mintpal][@currency] || 0
     c = balance[:cryptsy][@currency] || 0
+    m = balance[:mintpal][@currency] || 0
     total = m + c
     @step = total / 200
     @hurdle = {
-      mintpal: min_spread(m / total),
-      cryptsy: min_spread(c / total)
+      cryptsy: min_spread(c / total),
+      mintpal: min_spread(m / total)
     }
+    "#{Time.stamp}  %4s  %.1f + %.1f = %.1f" % [@currency, c, m, c + m]
   end
 
   def opportunity(low, high)
     midrate = (low.sell + high.buy) / 2.0
-    limit_sell = (midrate * 1.003).round(8)
-    limit_buy = (midrate * 0.997).round(8)
+    limit_sell = [(midrate * 1.003).round(8), high.buy].min
+    limit_buy = [(midrate * 0.997).round(8), low.sell].max
+
     OpenStruct.new(
       limit_sell: limit_sell,
       limit_buy: limit_buy,
@@ -119,7 +121,8 @@ class ArbitrageBot
   end
 
   def min_spread(ratio)
-    [-Math.log(ratio, 10) * 8, 0.6].max
+    return 0.6 if (ratio < 0.5) || doge?
+    [-Math.log(ratio, 10) * 5, 0.6].max
   end
 
 end

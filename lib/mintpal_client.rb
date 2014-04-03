@@ -6,7 +6,8 @@ class MintpalClient
   MARKET = {
     "AUR" => 25,
     "BC" => 23,
-    "LTC" => 19
+    "LTC" => 19,
+    "DOGE" => 16
   }
 
   def initialize(currency, config)
