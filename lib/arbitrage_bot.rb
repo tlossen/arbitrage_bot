@@ -9,8 +9,6 @@ class ArbitrageBot
     ]
 
     forever do
-      bots.rotate! unless bots.first.execute
-
       append_regularly("balance.log", 40) do |out|
         balance = bots.first.fetch_balance
         bots.each do |bot| 
@@ -24,6 +22,7 @@ class ArbitrageBot
         out.puts line
       end
 
+      bots.rotate! unless bots.first.execute
       sleep(0.5)
     end
   end
@@ -121,7 +120,7 @@ class ArbitrageBot
   end
 
   def min_spread(ratio)
-    return 0.6 if (ratio < 0.5) || doge?
+    return 0.6 if ratio > 0.5 || doge?
     [-Math.log(ratio, 10) * 5, 0.6].max
   end
 
