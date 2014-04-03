@@ -120,8 +120,11 @@ class ArbitrageBot
   end
 
   def min_spread(ratio)
-    return 0.6 if ratio > 0.5 || doge?
-    [-Math.log(ratio, 10) * 5, 0.6].max
+    if doge?
+      ratio > 0.15 ? 0.6 : [-Math.log(ratio, 10) * 5, 0.6].max
+    else
+      ratio > 0.5 ? 0.6 : [-Math.log(ratio, 10) * 5, 0.6].max
+    end
   end
 
 end
