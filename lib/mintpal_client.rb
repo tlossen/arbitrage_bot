@@ -16,6 +16,7 @@ class MintpalClient
     @config = config
     @agent = Mechanize.new do |agent|
       agent.user_agent_alias = "Mac Safari"
+      # agent.agent.allowed_error_codes = [503]
     end
   end
 
@@ -90,9 +91,20 @@ class MintpalClient
     "<#{self.class.name}>"
   end
 
-private
+# private
+
+  # def cloudflare_challenge
+  #   page = @agent.get("http://www.mintpal.com/")
+  #   page.at("script").text.match(/a.value = (.*);/)
+  #   answer = eval($1) + "mintpal.com".length
+  #   sleep(5.850)
+  #   form = page.form_with(id: "challenge-form") do |form|
+  #     form["jschl_answer"] = answer
+  #   end.submit
+  # end
 
   def with_login(&block)
+    # cloudflare_challenge
     page = @agent.get("https://www.mintpal.com/login")
     token = page.forms.first["csrf_token"]
     begin
