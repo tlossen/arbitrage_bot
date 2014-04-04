@@ -80,7 +80,8 @@ class ArbitrageBot
       amount = doge? ? 
         [@step * 10, opp.volume].min :
         [@step * [opp.percent * 100, 20].min, opp.volume].min
-      high.client.sell(amount, opp.limit_sell) && low.client.buy(amount, opp.limit_buy)
+      high.client.sell(amount, opp.limit_sell)
+      low.client.buy(amount, opp.limit_buy)
       @count += 1
       @volume += amount * opp.limit_sell
       return true

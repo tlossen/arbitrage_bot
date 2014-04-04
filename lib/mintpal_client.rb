@@ -44,7 +44,7 @@ class MintpalClient
   end
 
   def buy(amount, price)
-    puts "#{Time.stamp} [mintpal]  buy #{@currency} %.2f for %.8f".cyan % [amount, price]
+    puts "#{Time.stamp}  %4s  [mintpal] buy %.2f for %.8f".cyan % [@currency, amount, price]
     total = amount * price
     fee = total * 0.0015
     with_login do |token|
@@ -59,14 +59,12 @@ class MintpalClient
         "x-requested-with" => "XMLHttpRequest"
       })
       result = JSON.parse(page.body)
-      success = ("success" == result["response"])
-      raise result["reason"] unless success
-      success
+      raise result["reason"] unless "success" == result["response"]
     end
   end
 
   def sell(amount, price)
-    puts "#{Time.stamp} [mintpal] sell #{@currency} %.2f for %.8f".cyan % [amount, price]
+    puts "#{Time.stamp}  %4s  [mintpal] sell %.2f for %.8f".cyan % [@currency, amount, price]
     total = amount * price
     fee = total * 0.0015
     with_login do |token|
@@ -81,9 +79,7 @@ class MintpalClient
         "x-requested-with" => "XMLHttpRequest"
       })
       result = JSON.parse(page.body)
-      success = ("success" == result["response"])
-      raise result["reason"] unless success
-      success
+      raise result["reason"] unless "success" == result["response"]
     end
   end
 
