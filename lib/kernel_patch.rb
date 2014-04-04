@@ -8,9 +8,12 @@ module Kernel
       rescue SystemExit, Interrupt
         raise
       rescue Exception => e
-        puts e.message.red
+        puts "#{Time.stamp}  #{e.message}".red
         puts e.backtrace
-        sleep(3)
+        5.times do
+          puts
+          sleep(1)
+        end
       end
     end
   end

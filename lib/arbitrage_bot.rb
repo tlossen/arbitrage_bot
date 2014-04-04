@@ -5,6 +5,7 @@ class ArbitrageBot
     bots = [
       ArbitrageBot.new("AUR", config),
       ArbitrageBot.new("DOGE", config),
+      ArbitrageBot.new("LTC", config),
       ArbitrageBot.new("BC", config)
     ]
 
@@ -44,6 +45,9 @@ class ArbitrageBot
     @cryptsy = CryptsyClient.new(currency, config)
     @hurdle = Hash.new(min_spread(0.5))
     @step = 1.0
+    @count = 0
+    @volume = 0
+    @rate = 0
   end
 
   def doge?
@@ -52,6 +56,7 @@ class ArbitrageBot
 
   def execute
     m, c = @mintpal.orderbook, @cryptsy.orderbook
+    @rate = c.sell
     
     low, high = nil, nil
     if m.valid? && c.valid?
@@ -76,6 +81,8 @@ class ArbitrageBot
         [@step * 10, opp.volume].min :
         [@step * [opp.percent * 100, 20].min, opp.volume].min
       high.client.sell(amount, opp.limit_sell) && low.client.buy(amount, opp.limit_buy)
+      @count += 1
+      @volume += amount * opp.limit_sell
       return true
     elsif opp.percent > 0
       puts status.yellow
@@ -101,7 +108,8 @@ class ArbitrageBot
       cryptsy: min_spread(c / total),
       mintpal: min_spread(m / total)
     }
-    "#{Time.stamp}  %4s  %.1f + %.1f = %.1f" % [@currency, c, m, c + m]
+    "#{Time.stamp}  %4s  [%d: %.3f]  %.1f + %.1f = %.1f  (%.3f)" % 
+      [@currency, @count, @volume, c, m, c + m, (c + m) * @rate]
   end
 
   def opportunity(low, high)
