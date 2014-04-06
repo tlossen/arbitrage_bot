@@ -7,7 +7,8 @@ class MintpalClient
     "AUR" => 25,
     "BC" => 23,
     "LTC" => 19,
-    "DOGE" => 16
+    "DOGE" => 16,
+    "ZET" => 66
   }
 
   def initialize(currency, config)
@@ -16,7 +17,7 @@ class MintpalClient
     @config = config
     @agent = Mechanize.new do |agent|
       agent.user_agent_alias = "Mac Safari"
-      # agent.agent.allowed_error_codes = [503]
+      agent.agent.allowed_error_codes = [500]
     end
   end
 
@@ -26,8 +27,8 @@ class MintpalClient
 
   def orderbook
     data = %w[buy sell].map do |type|
-      result = open("https://api.mintpal.com/market/orders/#{@currency}/BTC/#{type.upcase}").read
-      JSON.parse(result)["orders"].map do |row|
+      page = @agent.get("https://api.mintpal.com/market/orders/#{@currency}/BTC/#{type.upcase}")
+      JSON.parse(page.body)["orders"].map do |row|
         [row["price"], row["amount"], row["total"]].map(&:to_f)
       end
     end

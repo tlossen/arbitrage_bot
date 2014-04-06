@@ -8,7 +8,8 @@ class CryptsyClient
     "BC" => 179,
     "LTC" => 3,
     "VTC" => 151,
-    "DOGE" => 132
+    "DOGE" => 132,
+    "ZET" => 85
   }
 
   def initialize(currency, config)

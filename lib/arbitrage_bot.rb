@@ -2,9 +2,11 @@ class ArbitrageBot
 
   def self.run 
     config = JSON.parse(open("config.json").read)
+    Notification.init(config)
+
     bots = [
       ArbitrageBot.new("AUR", config),
-      ArbitrageBot.new("DOGE", config),
+      ArbitrageBot.new("ZET", config),
       ArbitrageBot.new("LTC", config),
       ArbitrageBot.new("BC", config)
     ]

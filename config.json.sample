@@ -1,10 +1,19 @@
 {
-	"cryptsy": {
-		"public_key": "dead",
-		"private_key": "beef"
-	},
-	"mintpal": {
-		"email": "x@y.com",
-		"password": "changeme"
-	}
+  "cryptsy": {
+    "public_key": "dead",
+    "private_key": "beef"
+  },
+  "mintpal": {
+    "email": "x@y.com",
+    "password": "changeme"
+  },
+  "smtp": {
+    "from": "x@y.com",
+    "to": "x@y.com",
+    "server": "smtp.gmail.com",
+    "port": 587,
+    "domain": "y.com",
+    "username": "x@y.com",
+    "password": "changeme"
+  }
 }

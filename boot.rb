@@ -10,6 +10,7 @@ require "lib/time_patch.rb"
 require "lib/kernel_patch.rb"
 require "lib/mechanize_patch.rb"
 
+require "lib/notification.rb"
 require "lib/orderbook.rb"
 require "lib/cryptsy_client.rb"
 require "lib/mintpal_client.rb"
