@@ -13,16 +13,26 @@ class ArbitrageBot
 
     forever do
       append_regularly("balance.log", 40) do |out|
+        lines = []
         balance = bots.first.fetch_balance
         bots.each do |bot| 
           line = bot.adjust(balance)
+          lines << line
           puts line.blue
         end
 
         c, m = balance[:cryptsy]["BTC"], balance[:mintpal]["BTC"]
-        line = "#{Time.stamp}   BTC  %.3f + %.3f = %.3f" % [ c, m, c + m ]
+        total = c + m
+        line = "#{Time.stamp}   BTC  %.3f + %.3f = %.3f" % [ c, m, total ]
+        lines << line
         puts line.blue.on_white
         out.puts line
+
+        append_regularly("balance_1h.log", 60*60) do |out2|
+          subject, body = "%.3f" % total, lines.join("\n")
+          Notification.send(subject, body)
+          out2.puts body
+        end
       end
 
       bots.rotate! unless bots.first.execute
