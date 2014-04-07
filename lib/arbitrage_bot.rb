@@ -6,9 +6,8 @@ class ArbitrageBot
 
     bots = [
       ArbitrageBot.new("AUR", config),
-      ArbitrageBot.new("ZET", config),
       ArbitrageBot.new("LTC", config),
-      ArbitrageBot.new("BC", config)
+      ArbitrageBot.new("ZET", config)
     ]
 
     forever do
@@ -22,15 +21,14 @@ class ArbitrageBot
         end
 
         c, m = balance[:cryptsy]["BTC"], balance[:mintpal]["BTC"]
-        total = c + m
-        line = "#{Time.stamp}   BTC  %.3f + %.3f = %.3f" % [ c, m, total ]
+        line = "#{Time.stamp}   BTC  %.3f + %.3f = %.3f" % [ c, m, c + m ]
         lines << line
         puts line.blue.on_white
         out.puts line
 
         append_regularly("balance_1h.log", 60*60) do |out2|
-          subject, body = "%.3f" % total, lines.join("\n")
-          Notification.send(subject, body)
+          body = lines.join("\n")
+          Notification.send("status", body)
           out2.puts body
         end
       end
