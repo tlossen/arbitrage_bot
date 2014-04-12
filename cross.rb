@@ -5,10 +5,10 @@ require "colorize"
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
-require "cross/hash_patch.rb"
-require "cross/time_patch.rb"
-require "cross/kernel_patch.rb"
-require "cross/mechanize_patch.rb"
+require "monkey/hash.rb"
+require "monkey/time.rb"
+require "monkey/kernel.rb"
+require "monkey/mechanize.rb"
 
 require "cross/notification.rb"
 require "cross/orderbook.rb"
