@@ -1,5 +1,4 @@
 require "mechanize"
-require "open-uri"
 require "ostruct"
 require "colorize"
 
