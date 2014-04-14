@@ -61,10 +61,6 @@ class ArbitrageBot
     @rate = 0
   end
 
-  def doge?
-    @currency == "DOGE"
-  end
-
   def execute
     m, c = @mintpal.orderbook, @cryptsy.orderbook
     @rate = c.sell
@@ -88,9 +84,7 @@ class ArbitrageBot
     
     if opp.percent > opp.hurdle && opp.volume >= 0.1
       puts status.green 
-      amount = doge? ? 
-        [@step * 10, opp.volume].min :
-        [@step * [opp.percent * 100, 20].min, opp.volume].min
+      amount = [@step * [opp.percent * 100, 20].min, opp.volume].min
       high.client.sell(amount, opp.limit_sell)
       low.client.buy(amount, opp.limit_buy)
       @count += 1
@@ -140,11 +134,7 @@ class ArbitrageBot
   end
 
   def min_spread(ratio)
-    if doge?
-      ratio > 0.15 ? 0.6 : [-Math.log(ratio, 10) * 5, 0.6].max
-    else
-      ratio > 0.5 ? 0.6 : [-Math.log(ratio, 10) * 5, 0.6].max
-    end
+    ratio > 0.5 ? 0.6 : [-Math.log(ratio, 10) * 5, 0.6].max
   end
 
 end
