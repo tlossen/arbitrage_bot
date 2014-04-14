@@ -1,6 +1,7 @@
 require "openssl"
 require "Base64"
 require "httparty"
+require "uri"
 
 
 class MintpalApi
@@ -17,15 +18,17 @@ class MintpalApi
     get("/wallet/balances")
   end
 
-  def get(url, params)
+private
+
+  def get(path, params)
     params.merge(key: @public_key, time: Time.now.to_i)
-    params.merge(hash: hmac(...))
-    self.class.get(url, query: params)
+    params.merge(hash: hmac(base_uri + "?" + URI.encode_www_form(params)))
+    self.class.get(path, query: params)
   end
 
   def hmac(data)
-    digest = OpenSSL::HMAC.digest(OpenSSL::Digest::Digest.new('sha256'), 
-      @private_key, data)
+    sha256 = OpenSSL::Digest::Digest.new('sha256')
+    digest = OpenSSL::HMAC.digest(sha256, @private_key, data)
     Base64.encode64(digest).strip
   end
 
