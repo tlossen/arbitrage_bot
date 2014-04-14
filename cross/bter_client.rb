@@ -20,9 +20,9 @@ class BterClient
 
 	def initialize(currency, config)
     @currency = currency
-    @pair = "#{currency}_BTC"
+    @pair = "#{currency}_BTC".downcase
     @public = Bter::Public.new
-    @private = Bter::Private.new
+    @private = Bter::Trade.new
     @private.key = config["bter"]["key"]
     @private.secret = config["bter"]["secret"]
   end
@@ -42,7 +42,9 @@ class BterClient
   end
 
   def balance
-    @private.get_info["available_funds"].change(&:to_f)
+    @private.get_info[:available_funds].remap do |hash, key, value|
+      hash[key.to_s] = value.to_f
+    end
   end
 
   def buy(amount, price)
