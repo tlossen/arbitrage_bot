@@ -7,6 +7,7 @@ class ArbitrageBot
     bots = [
       ArbitrageBot.new("AUR", config),
       ArbitrageBot.new("LTC", config),
+      ArbitrageBot.new("BC", config),
       ArbitrageBot.new("ZET", config)
     ]
 
