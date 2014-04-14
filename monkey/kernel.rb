@@ -1,19 +1,21 @@
 # coding: utf-8
 module Kernel
 
-  def forever(&block)
+  def forever(every = nil, &block)
     loop do
       begin
+        start = Time.now.to_f
         yield
+        if every
+          wait = every - (Time.now.to_f - start)
+          sleep(wait) if wait > 0
+        end
       rescue SystemExit, Interrupt
         raise
       rescue Exception => e
-        puts "#{Time.stamp}  #{e.message}".red
+        puts "#{Time.stamp}  #{e.message}"
         puts e.backtrace
-        5.times do
-          puts
-          sleep(1)
-        end
+        sleep(1)
       end
     end
   end
