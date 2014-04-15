@@ -42,7 +42,7 @@ class BterClient
 
   def sell(amount, price)
     puts "#{Time.stamp}  %4s  [bter] sell %.2f for %.8f".cyan % [@currency, amount, price]
-    @private.sell(@pair, amount, price)
+    result = @private.sell(@pair, amount, price)
     raise result[:msg] unless "true" == result[:result].to_s
     true
   end
