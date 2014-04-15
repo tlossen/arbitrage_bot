@@ -46,14 +46,14 @@ class CryptsyClient
   def buy(amount, price)
     puts "#{Time.stamp}  %4s  [cryptsy] buy %.2f for %.8f".cyan % [@currency, amount, price]
     result = @client.createorder(@market, "buy", amount, price)
-    raise result.inspect unless "1" == result["success"]
+    raise result["error"] unless "1" == result["success"]
     true
   end
 
   def sell(amount, price)
     puts "#{Time.stamp}  %4s  [cryptsy] sell %.2f for %.8f".cyan % [@currency, amount, price]
     result = @client.createorder(@market, "sell", amount, price)
-    raise result.inspect unless "1" == result["success"]
+    raise result["error"] unless "1" == result["success"]
     true
   end
 

@@ -33,7 +33,8 @@ class ArbitrageBot
         end
       end
 
-      bots.rotate! unless bots.first.execute
+      bots.rotate! 
+      bots.rotate!(-1) if bots.first.execute
       sleep(0.5)
     end
   end
