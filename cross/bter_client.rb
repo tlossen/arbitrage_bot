@@ -1,21 +1,6 @@
 require "bter"
 
 
-module Bter
-  class Trade
-    def buy(pair, amount, rate=nil)
-      rate ||= get_rate(pair)
-      trade({:pair => pair, :type => "BUY", :rate => rate, :amount => amount})
-    end
-    
-    def sell(pair, amount, rate=nil)
-      rate ||= get_rate(pair)
-      trade({:pair => pair, :type => "SELL", :rate => rate, :amount => amount})
-    end
-  end
-end   
-
-
 class BterClient
 
 	def initialize(currency, config)
@@ -28,14 +13,15 @@ class BterClient
   end
 
   def name
-    :bter
+    :mintpal
   end
 
   def orderbook
     raw = @public.depth(@pair)
     data = [:bids, :asks].map do |type|
       raw[type].map do |row|
-        [row[0], row[1], row[0] * row[1]]
+        rate, amount = row[0].to_f, row[1].to_f
+        [rate, amount, rate * amount]
       end
     end
     Orderbook.new(self, data[0], data[1].reverse)
@@ -49,12 +35,16 @@ class BterClient
 
   def buy(amount, price)
     puts "#{Time.stamp}  %4s  [bter] buy %.2f for %.8f".cyan % [@currency, amount, price]
-    @private.buy(@pair, amount, price)
+    result = @private.buy(@pair, amount, price)
+    raise result[:msg] unless "true" == result[:result].to_s
+    true
   end
 
   def sell(amount, price)
     puts "#{Time.stamp}  %4s  [bter] sell %.2f for %.8f".cyan % [@currency, amount, price]
     @private.sell(@pair, amount, price)
+    raise result[:msg] unless "true" == result[:result].to_s
+    true
   end
 
   def inspect

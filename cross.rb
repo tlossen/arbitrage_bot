@@ -12,7 +12,7 @@ require "monkey/mechanize.rb"
 require "cross/notification.rb"
 require "cross/orderbook.rb"
 require "cross/cryptsy_client.rb"
-require "cross/mintpal_client.rb"
+require "cross/bter_client.rb"
 
 require "cross/arbitrage_bot.rb"
 

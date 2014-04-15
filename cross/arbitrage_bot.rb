@@ -5,7 +5,6 @@ class ArbitrageBot
     Notification.init(config)
 
     bots = [
-      ArbitrageBot.new("AUR", config),
       ArbitrageBot.new("LTC", config),
       ArbitrageBot.new("BC", config),
       ArbitrageBot.new("ZET", config)
@@ -52,7 +51,7 @@ class ArbitrageBot
 
   def initialize(currency, config)
     @currency = currency
-    @mintpal = MintpalClient.new(currency, config)
+    @mintpal = BterClient.new(currency, config)
     @cryptsy = CryptsyClient.new(currency, config)
     @hurdle = Hash.new(min_spread(0.5))
     @step = 1.0
