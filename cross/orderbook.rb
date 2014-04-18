@@ -4,7 +4,7 @@ class Orderbook
 
   def initialize(client, buy, sell)
     @client, @buy, @sell = client, buy, sell
-    raise "malformed orders" unless top_buy < top_sell
+    raise "malformed orders #{client.inspect}" if top_buy > top_sell
   end
 
   def top_buy

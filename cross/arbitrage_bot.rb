@@ -10,6 +10,7 @@ class ArbitrageBot
       ArbitrageBot.new("ZET", config)
     ]
 
+    update_balance(bots)
     forever do
       maybe_update_balance(bots)
       bots.rotate! 
@@ -40,7 +41,7 @@ class ArbitrageBot
     lines.sort!
 
     btc = balance.values.map { |value| value["BTC"] || 0 }
-    lines << "#{Time.stamp}   BTC  #{as_addition(btc)}"
+    lines << "#{Time.stamp}   BTC  #{as_addition(btc, 3)}"
     lines
   end
 
@@ -52,9 +53,9 @@ class ArbitrageBot
     end
   end
 
-  def self.as_addition(values)
-    terms = values.map { |value| "%.1f" % value }.join(" + ")
-    "#{terms} = %.1f" % values.sum
+  def self.as_addition(values, precision=1)
+    terms = values.map { |value| "%.#{precision}f" % value }.join(" + ")
+    "#{terms} = %.#{precision}f" % values.sum
   end
 
 
@@ -83,17 +84,20 @@ class ArbitrageBot
       opportunity(low, high) :
       OpenStruct.new(limit_sell: 0, limit_buy: 0, spread: 0, percent: 0, volume: 0, hurdle: 0)
 
-    status = "#{Time.stamp}  %4s  lo: %.8f %.8f  hi: %.8f %.8f  spread: %.8f (%.2f%% > %.2f%%)  volume: %.1f" %
-      [@currency, low.top_buy, low.top_sell, high.top_buy, high.top_sell, opp.spread, opp.percent * 100, opp.hurdle * 100, opp.volume]
+    status = "#{Time.stamp}  %4s  %s: %.8f %.8f  %s: %.8f %.8f  spread: %.8f (%.2f%% > %.2f%%)  volume: %.1f" % [
+      @currency, id(low.client), low.top_buy, low.top_sell,
+      id(high.client), high.top_buy, high.top_sell,
+      opp.spread, opp.percent * 100, opp.hurdle * 100, opp.volume
+    ]
     status.gsub!(/0\.(\d{8})/) { |m| $1 } 
     
     if opp.percent > opp.hurdle && opp.volume * low.top_sell > 0.001
       puts status.green 
-      amount = [@step * [opp.percent * 100, 20].min, opp.volume].min
-      # high.client.sell(amount, opp.limit_sell)
-      # low.client.buy(amount, opp.limit_buy)
-      # @count += 1
-      # @volume += amount * opp.limit_sell
+      amount = [@step * [opp.percent * 100, 20].min, opp.volume, high.client.amount].min
+      execute_sell(high.client, amount, opp.limit_sell)
+      execute_buy(low.client, amount, opp.limit_buy)
+      @count += 1
+      @volume += amount * opp.limit_sell
       return true
     elsif opp.percent > 0
       puts status.yellow
@@ -101,6 +105,16 @@ class ArbitrageBot
       puts status
     end
     false
+  end
+
+  def execute_buy(client, amount, limit)
+    client.buy(amount, limit)
+    client.amount += amount
+  end
+
+  def execute_sell(client, amount, limit)
+    client.sell(amount, limit)
+    client.amount -= amount
   end
 
   def fetch_balance
@@ -137,6 +151,10 @@ class ArbitrageBot
 
   def min_spread(ratio)
     ratio > 0.5 ? 0.6 : [-Math.log(ratio, 10) * 5, 0.6].max
+  end
+
+  def id(client)
+    client.class.name.downcase[0]
   end
 
 end

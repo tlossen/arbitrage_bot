@@ -56,7 +56,7 @@ class CryptsyClient
   end
 
   def inspect
-    "<#{self.class.name}>"
+    "<#{self.class.name} #{@currency}>"
   end
 
 end
