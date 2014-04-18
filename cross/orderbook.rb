@@ -4,17 +4,14 @@ class Orderbook
 
   def initialize(client, buy, sell)
     @client, @buy, @sell = client, buy, sell
+    raise "malformed orders" unless top_buy < top_sell
   end
 
-  def valid?
-    buy < sell
-  end
-
-  def buy
+  def top_buy
     @buy[0][0]
   end
 
-  def sell
+  def top_sell
     @sell[0][0]
   end
 

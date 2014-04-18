@@ -14,7 +14,7 @@ module Kernel
         raise
       rescue Exception => e
         puts "#{Time.stamp}  #{e.message}".red
-        # puts e.backtrace
+        puts e.backtrace
         sleep(1)
       end
     end

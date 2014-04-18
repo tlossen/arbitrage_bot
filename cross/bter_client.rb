@@ -3,6 +3,8 @@ require "bter"
 
 class BterClient
 
+  attr_accessor :amount, :total
+
 	def initialize(currency, config)
     @currency = currency
     @pair = "#{currency}_BTC".downcase
@@ -10,10 +12,6 @@ class BterClient
     @private = Bter::Trade.new
     @private.key = config["bter"]["key"]
     @private.secret = config["bter"]["secret"]
-  end
-
-  def name
-    :mintpal
   end
 
   def orderbook

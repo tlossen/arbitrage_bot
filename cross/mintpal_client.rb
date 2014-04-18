@@ -11,6 +11,8 @@ class MintpalClient
     "ZET" => 66
   }
 
+  attr :amount, :total
+
   def initialize(currency, config)
     @currency = currency
     @market = MARKET[currency]
@@ -19,10 +21,6 @@ class MintpalClient
       agent.user_agent_alias = "Mac Safari"
       agent.agent.allowed_error_codes = [500]
     end
-  end
-
-  def name
-    :mintpal
   end
 
   def orderbook

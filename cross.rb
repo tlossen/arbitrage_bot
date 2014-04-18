@@ -4,6 +4,7 @@ require "colorize"
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
+require "monkey/array.rb"
 require "monkey/hash.rb"
 require "monkey/time.rb"
 require "monkey/kernel.rb"

@@ -12,6 +12,8 @@ class CryptsyClient
     "ZET" => 85
   }
 
+  attr_accessor :amount, :total
+
   def initialize(currency, config)
     @currency = currency
     @market = MARKET[currency]
@@ -19,10 +21,6 @@ class CryptsyClient
       config["cryptsy"]["public_key"], 
       config["cryptsy"]["private_key"]
     )
-  end
-
-  def name
-    :cryptsy
   end
 
   def orderbook
