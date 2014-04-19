@@ -1,7 +1,7 @@
 require "cryptsy/api"
 
 
-class CryptsyClient
+class CryptsyClient < Client
 
   MARKET = {
     "AUR" => 160,
@@ -11,8 +11,6 @@ class CryptsyClient
     "DOGE" => 132,
     "ZET" => 85
   }
-
-  attr_accessor :amount, :total
 
   def initialize(currency, config)
     @currency = currency
@@ -53,10 +51,6 @@ class CryptsyClient
     result = @client.createorder(@market, "sell", amount, price)
     raise result["error"] unless "1" == result["success"]
     true
-  end
-
-  def inspect
-    "<#{self.class.name} #{@currency}>"
   end
 
 end

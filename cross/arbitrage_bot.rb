@@ -7,14 +7,12 @@ class ArbitrageBot
     bots = config["currencies"].map do |currency|
       ArbitrageBot.new(currency, config)
     end
-
     
     update_balance(bots)
     forever do
       maybe_update_balance(bots)
       bots.rotate! 
       bots.rotate!(-1) if bots.first.execute
-      sleep(0.5)
     end
   end
 
@@ -93,8 +91,8 @@ class ArbitrageBot
     if opp.percent > opp.hurdle && opp.volume * low.top_sell > 0.001
       puts status.green 
       amount = [@step * [opp.percent * 100, 20].min, opp.volume, high.client.amount].min
-      execute_sell(high.client, amount, opp.limit_sell)
-      execute_buy(low.client, amount, opp.limit_buy)
+      high.client.exec_sell(amount, opp.limit_sell)
+      low.client.exec_buy(amount, opp.limit_buy)
       @count += 1
       @volume += amount * opp.limit_sell
       return true
@@ -104,16 +102,6 @@ class ArbitrageBot
       puts status
     end
     false
-  end
-
-  def execute_buy(client, amount, limit)
-    client.buy(amount, limit)
-    client.amount += amount
-  end
-
-  def execute_sell(client, amount, limit)
-    client.sell(amount, limit)
-    client.amount -= amount
   end
 
   def fetch_balance
@@ -144,12 +132,8 @@ class ArbitrageBot
       spread: high.top_buy - low.top_sell,
       percent: (high.top_buy - low.top_sell) / low.top_sell,
       volume: [low.sell_volume(limit_buy), high.buy_volume(limit_sell)].min,
-      hurdle: min_spread(high.client.amount / high.client.total) / 100.0
+      hurdle: high.client.hurdle
     )
-  end
-
-  def min_spread(ratio)
-    ratio > 0.5 ? 0.6 : [-Math.log(ratio, 10) * 5, 0.6].max
   end
 
   def id(client)

@@ -1,9 +1,7 @@
 require "bter"
 
 
-class BterClient
-
-  attr_accessor :amount, :total
+class BterClient < Client
 
 	def initialize(currency, config)
     @currency = currency
@@ -43,10 +41,6 @@ class BterClient
     result = @client.sell(@pair, amount, price)
     raise result["message"] unless "true" == result["result"].to_s
     true
-  end
-
-  def inspect
-    "<#{self.class.name}>"
   end
 
 end
