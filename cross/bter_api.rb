@@ -49,7 +49,8 @@ private
     )
     response = self.class.post("/#{method}", 
       headers: { "Key" => @key, "Sign" => signature(params) },
-      body: params
+      body: params,
+      verify: false 
     )
     JSON.parse(response.body)
   end
