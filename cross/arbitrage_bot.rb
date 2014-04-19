@@ -4,12 +4,11 @@ class ArbitrageBot
     config = JSON.parse(open("config.json").read)
     Notification.init(config)
 
-    bots = [
-      ArbitrageBot.new("LTC", config),
-      ArbitrageBot.new("BC", config),
-      ArbitrageBot.new("ZET", config)
-    ]
+    bots = config["currencies"].map do |currency|
+      ArbitrageBot.new(currency, config)
+    end
 
+    
     update_balance(bots)
     forever do
       maybe_update_balance(bots)
@@ -20,7 +19,7 @@ class ArbitrageBot
   end
 
   def self.maybe_update_balance(bots)
-    append_regularly("balance.log", 40) do |out|
+    append_regularly("balance.log", 60) do |out|
       lines = update_balance(bots)
       body = lines.join("\n")
       puts body.blue

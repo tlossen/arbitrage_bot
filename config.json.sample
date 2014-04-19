@@ -1,4 +1,8 @@
 {
+  "currencies": [ 
+    "AUR", 
+    "ZET" 
+  ], 
   "cryptsy": {
     "public_key": "dead",
     "private_key": "beef"
