@@ -53,4 +53,9 @@ class CryptsyClient < Client
     true
   end
 
+  def cleanup
+    result = @client.cancelallorders
+    puts "#{Time.stamp}  [cryptsy] cancelled orders: #{result.inspect}".magenta
+  end
+
 end

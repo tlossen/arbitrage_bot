@@ -43,4 +43,12 @@ class BterClient < Client
     true
   end
 
+  def cleanup
+    @client.orderlist["orders"].each do |order|
+      order_id = order["id"]
+      puts "#{Time.stamp} [bter] cancel order #{order_id}".magenta
+      @client.cancel(order_id)
+    end
+  end
+
 end

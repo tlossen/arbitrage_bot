@@ -31,6 +31,10 @@ class Trader
       [@currency, @count, @volume, total * @rate]
   end
 
+  def cleanup
+    @clients.values.each(&:cleanup)
+  end
+
   def execute
     books = @clients.values.map(&:orderbook)
     @rate = books.first.top_buy

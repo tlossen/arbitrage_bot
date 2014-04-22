@@ -8,6 +8,18 @@ class BterApi
   
   base_uri "https://bter.com/api/1/private"
 
+  def self.test
+    config = JSON.parse(open("config.json").read)
+    api = BterApi.new(
+      config["bter"]["key"],
+      config["bter"]["secret"]
+    )
+    api.orderlist["orders"].each do |order|
+      puts "cancelling #{order["id"]}"
+      api.cancel(order["id"])
+    end
+  end
+
   def initialize(key, secret)
     @key = key
     @secret = secret
@@ -19,7 +31,7 @@ class BterApi
   end
 
   def getfunds
-    execute("getfunds", {})
+    execute("getfunds")
   end
 
   def buy(pair, amount, rate)
@@ -40,10 +52,20 @@ class BterApi
     )
   end
 
+  def orderlist
+    execute("orderlist")
+  end
+
+  def cancel(order_id)
+    execute("cancelorder",
+      order_id: order_id
+    )
+  end
+
 private
 
-  def execute(method, params)
-    params.merge(
+  def execute(method, params={})
+    params.merge!(
       method: method,
       nonce: Time.now.to_i
     )
