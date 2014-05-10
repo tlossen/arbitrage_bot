@@ -22,7 +22,7 @@ class ArbitrageBot
       body = lines.join("\n")
       puts body.blue
       out.puts body
-      append_regularly("balance_1h.log", 60*60) do |out2|
+      append_regularly("balance_1h.log", 4*60*60) do |out2|
         Notification.send("status", body)
         out2.puts body
       end
